@@ -72,6 +72,7 @@ class CMISRepositoryWrapper {
 		// Process the HTTP request
 		// 'til now only the GET request has been tested
 		// Does not URL encode any inputs yet
+
 		if (is_array($this->auth_options)) {
 			 $url=CMISRepositoryWrapper::getOpUrl($url,$this->auth_options);
 		}
@@ -96,6 +97,7 @@ class CMISRepositoryWrapper {
 		}
 		//TODO: Make this storage optional
 		$retval = new stdClass();
+
 		$retval->url=$url;
 		$retval->method=$method;
 		$retval->content_sent=$content;
@@ -581,7 +583,13 @@ xmlns:cmisra="http://docs.oasisopen.org/ns/cmis/restatom/200908/">
 		if (!isset($query_template)) {
 			$query_template = CMISService::getQueryTemplate();
 		}
-		$hash_values=$options;
+		$default_hash_values = array(
+			"includeAllowableActions" => "true",
+			"searchAllVersions" => "false",
+			"maxItems" => 10,
+			"skipCount" => 0
+		);
+		$hash_values=array_merge($default_hash_values, $options);
 		$hash_values['q'] = $q;
 		$post_value = CMISRepositoryWrapper::processTemplate($query_template,$hash_values);
 		$ret = $this->doPost($this->workspace->collections['query'],$post_value,MIME_CMIS_QUERY);
