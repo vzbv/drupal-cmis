@@ -1,5 +1,54 @@
 <?php
 
+function cmis_field_menu() {
+
+  // Entry Level Browser (when clicking the Button beneath a CMIS-Field)
+  $items['admin/settings/cmis/field/ajax'] = array(
+    'title' => 'cmis browse',
+    'page callback' => 'cmis_field_admin_ajax_browse',
+    'page arguments' => array(),
+    'delivery callback' => 'ajax_deliver',
+    'access arguments' => array('access cmis'),
+    'file' => 'cmis_field.admin.inc',
+    'type' => MENU_CALLBACK,
+  );
+
+  // Successive calls to subfolders go here (notice the wildcard)
+  $items['admin/settings/cmis/field/ajax/%/%'] = array(
+    'title' => 'cmis browse',
+    'page callback' => 'cmis_field_admin_ajax_browse',
+    'page arguments' => array(5,6),
+    'delivery callback' => 'ajax_deliver',
+    'access arguments' => array('access cmis'),
+    'file' => 'cmis_field.admin.inc',
+    'type' => MENU_CALLBACK,
+  );
+
+
+  return $items;
+}
+
+/**
+ * Allow CMIS fields to be themed via Drupal Theming
+ *
+ * @implements hook_theme()
+ */
+function cmis_field_theme() {
+  $items['cmis_field_browser'] = array(
+    'file' => 'cmis_field.theme.inc',
+  );
+
+  $items['cmis_field_browse_children'] = array(
+    'file' => 'cmis_field.theme.inc',
+  );
+
+  $items['cmis_field_browse_breadcrumbs'] = array(
+    'file' => 'cmis_field.theme.inc',
+  );
+
+  return $items;
+}
+
 /**
  * Implementation of hook_field_info()
  *
@@ -63,10 +112,6 @@ function cmis_field_field_instance_settings_form($field, $instance) {
     '#default_value' => isset($settings['cmis_field_rootFolderPath']) ? $settings['cmis_field_rootFolderPath'] : '',
   );
 
-  $form['#attached']['js'] = array(
-    array('data' => drupal_get_path('module', 'cmis_field') . '/js/cmis_field.js'),
-  );
-
   return $form;
 }
 
@@ -104,24 +149,51 @@ function cmis_field_field_widget_form(&$form, &$form_state, $field, $instance, $
   $element['path'] = array();
   $element['title'] = array();
 
+  $widget_id = 'edit-cmis-field-' . preg_replace("/_/", "-", $instance['field_name']) . '-' . $delta;
+
   $element['title'] += array(
     '#type' => 'textfield',
     '#default_value' => $title,
-    '#attributes' => array('class' => array('edit-field-cmis-field')),
+    '#attributes' => array('class' => array('edit-field-cmis-field'), 'id' => $widget_id . '-title'),
     '#title_display' => 'before',
     '#title' => check_plain($instance['label']),
   );
 
   $element['path'] += array(
     '#type' => 'hidden',
-    '#attributes' => array('class' => array('edit-field-cmis-path', 'search-form')),
+    '#attributes' => array('class' => array('edit-field-cmis-path', 'search-form'), 'id' => $widget_id . '-path'),
     '#default_value' => $path,
   );
 
-  $element['#attached']['js'] = array(
-    array('data' => drupal_get_path('module', 'cmis_field') . '/js/cmis_field.js'),
-    array('data' => array('cmispath' => $instance['settings']['cmis_field_rootFolderPath']), 'type' => 'setting'),
+  $root_folder_path = $instance['settings']['cmis_field_rootFolderPath'];
+  $ajax_path = 'admin/settings/cmis/field/ajax/' . $widget_id . '/';
+
+  if ($root_folder_path != '') {
+    module_load_include('api.inc', 'cmis');
+    module_load_include('utils.inc', 'cmis_browser');
+
+    // Invoke CMIS service
+    $repository = cmis_get_repository();
+
+    $object = cmisapi_getObjectByPath($repository->repositoryId, $root_folder_path);
+    $ajax_path .= base64_encode($object->properties['cmis:objectId']);
+  }
+
+  $button = array(
+    '#type' => 'button',
+    '#value' => t('Browse CMIS repository'),
+    '#submit' => array(),
+    '#ajax' => array(
+      'path' => $ajax_path,
+    ),
+    '#limit_validation_errors' => array(),
   );
+
+  $element['browse'] = $button;
+  $element['#type'] = "markup";
+  $element['#theme_wrappers'] = array('container');
+  $element['#attributes'] = array('id' => $widget_id);
+
   return $element;
 }
 
