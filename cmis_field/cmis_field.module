@@ -24,6 +24,14 @@ function cmis_field_menu() {
     'type' => MENU_CALLBACK,
   );
 
+  $items['cmis/field/ajax/%/remove'] = array(
+    'title' => 'cmis field remove',
+    'page callback' => 'cmis_field_ajax_remove',
+    'page arguments' => array(3),
+    'delivery_callback' => 'ajax_dliver',
+    'access arguments' => array('access cmis'),
+    'type' => MENU_CALLBACK
+  );
 
   return $items;
 }
@@ -195,7 +203,7 @@ function cmis_field_field_widget_form(&$form, &$form_state, $field, $instance, $
     '#value' => t('Remove'),
     '#submit' => array(),
     '#ajax' => array(
-      'path' => $ajax_path,
+      'path' => "cmis/field/ajax/" . $widget_id . "remove",
     ),
     '#limit_validation_errors' => array(),
   );
@@ -208,6 +216,26 @@ function cmis_field_field_widget_form(&$form, &$form_state, $field, $instance, $
   $element['#attributes'] = array('id' => $widget_id);
 
   return $element;
+}
+
+function cmis_field_ajax_remove($widget_id) {
+  $commands = array();
+
+  $commands[] = ajax_command_invoke('#' . $widget_id . '-title', 'val', array(''));
+  $commands[] = ajax_command_invoke('#' . $widget_id . '-path', 'val', array(''));
+
+  return $commands;
+}
+
+function cmis_field_widget_remove_field_value(&$form, &$form_state) {
+  $parents = $form_state['triggering_element']['#array_parents'];
+  $button_key = array_pop($parents);
+  $element = drupal_array_get_nested_value($form, $parents);
+
+  dpm($element, "element");
+  dpm($button_key, "button");
+
+
 }
 
 /**
