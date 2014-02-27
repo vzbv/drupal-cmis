@@ -28,7 +28,7 @@ function cmis_field_menu() {
     'title' => 'cmis field remove',
     'page callback' => 'cmis_field_ajax_remove',
     'page arguments' => array(3),
-    'delivery_callback' => 'ajax_dliver',
+    'delivery_callback' => 'ajax_deliver',
     'access arguments' => array('access cmis'),
     'type' => MENU_CALLBACK
   );
