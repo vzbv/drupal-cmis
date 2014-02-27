@@ -203,7 +203,7 @@ function cmis_field_field_widget_form(&$form, &$form_state, $field, $instance, $
     '#value' => t('Remove'),
     '#submit' => array(),
     '#ajax' => array(
-      'path' => "cmis/field/ajax/" . $widget_id . "remove",
+      'path' => "cmis/field/ajax/" . $widget_id . "/remove",
     ),
     '#limit_validation_errors' => array(),
   );
