@@ -190,7 +190,19 @@ function cmis_field_field_widget_form(&$form, &$form_state, $field, $instance, $
     '#limit_validation_errors' => array(),
   );
 
+  $clearButton = array(
+    '#type' => 'button',
+    '#value' => t('Remove'),
+    '#submit' => array(),
+    '#ajax' => array(
+      'path' => $ajax_path,
+    ),
+    '#limit_validation_errors' => array(),
+  );
+
   $element['browse'] = $button;
+  $element['clear'] = $clearButton;
+  $element['clear']['#submit'][] = 'cmis_field_widget_submit';
   $element['#type'] = "markup";
   $element['#theme_wrappers'] = array('container');
   $element['#attributes'] = array('id' => $widget_id);
