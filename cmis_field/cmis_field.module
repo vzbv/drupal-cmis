@@ -224,18 +224,11 @@ function cmis_field_ajax_remove($widget_id) {
   $commands[] = ajax_command_invoke('#' . $widget_id . '-title', 'val', array(''));
   $commands[] = ajax_command_invoke('#' . $widget_id . '-path', 'val', array(''));
 
-  return $commands;
-}
+  $page = array();
+  $page['#type'] = 'ajax';
+  $page['#commands'] = $commands;
 
-function cmis_field_widget_remove_field_value(&$form, &$form_state) {
-  $parents = $form_state['triggering_element']['#array_parents'];
-  $button_key = array_pop($parents);
-  $element = drupal_array_get_nested_value($form, $parents);
-
-  dpm($element, "element");
-  dpm($button_key, "button");
-
-
+  return $page;
 }
 
 /**
