@@ -649,39 +649,35 @@ xmlns:cmisra="http://docs.oasis-open.org/ns/cmis/restatom/200908/">
 	}
 	
 	function processAspectTemplate($aspectType, $propMap) {
-		
+		static $aspectTemplate;
+		if (!isset($aspectTemplate)) {
+			$aspectTemplate = CMISService::getAspectTemplate();
+		}
+		$aspectProps = $propMap;
 
-			$aspectProps = array_filter($propMap);
+		$propertiesXml = $this->processPropertyTemplates($aspectType, $aspectProps);
 
-			$propertiesXml = $this->processPropertyTemplates($aspectTypeName, $aspectProps);
+		$result = CMISRepositoryWrapper::processTemplate($aspectTemplate,
+			array(
+				'aspectTypeName' => $aspectType, 
+				'properties' => $propertiesXml
+			)
+		);
 
-			$result = CMISRepositoryWrapper::processTemplate($aspectTemplate,
-				array(
-					'aspectTypeName' => $aspectTypeName, 
-					'properties' => $propertiesXml
-				)
-			);
-
-			return $result;
+		return $result;
 	}
 
 	function processAspectTemplates($aspects) {
-		$aspectsXml = array();
-		static $aspectTemplate;
 		static $aspectsTemplate;
+		$aspectsXml = array();
 
 		if (!isset($aspectsTemplate)) {
-			$aspectsTemplate = CMISService::getAspectTemplate();
-		}
-		if (!isset($aspectTemplate)) {
-			$aspectTemplate = CMISService::getAspectTemplate();
+			$aspectsTemplate = CMISService::getAspectsTemplate();
 		}
 
 		foreach ($aspects as $aspectTypeName => $aspectProps) {
 			$aspectsXml[] = $this->processAspectTemplate($aspectTypeName, $aspectProps);
 		}
-
-		$aspectsTemplate = CMISService::getAspectsTemplate();
 
  		$result = CMISRepositoryWrapper::processTemplate($aspectsTemplate,array('aspects' => implode("\n",$aspectsXml)));
 		return $result;
