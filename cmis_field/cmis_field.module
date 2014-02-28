@@ -24,10 +24,10 @@ function cmis_field_menu() {
     'type' => MENU_CALLBACK,
   );
 
-  $items['cmis/field/ajax/%/remove'] = array(
+  $items['admin/settings/cmis/field/ajax/%/remove'] = array(
     'title' => 'cmis field remove',
     'page callback' => 'cmis_field_ajax_remove',
-    'page arguments' => array(3),
+    'page arguments' => array(5),
     'delivery callback' => 'ajax_deliver',
     'access arguments' => array('access cmis'),
     'type' => MENU_CALLBACK
@@ -203,7 +203,7 @@ function cmis_field_field_widget_form(&$form, &$form_state, $field, $instance, $
     '#value' => t('Remove'),
     '#submit' => array(),
     '#ajax' => array(
-      'path' => "cmis/field/ajax/" . $widget_id . "/remove",
+      'path' => "admin/settings/cmis/field/ajax/" . $widget_id . "/remove",
     ),
     '#limit_validation_errors' => array(),
   );
