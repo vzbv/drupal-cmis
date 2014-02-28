@@ -613,7 +613,10 @@ xmlns:cmisra="http://docs.oasis-open.org/ns/cmis/restatom/200908/">
 <atom:title>{title}</atom:title>
 {SUMMARY}
 {CONTENT}
-<cmisra:object><cmis:properties>{PROPERTIES}</cmis:properties></cmisra:object>
+<cmisra:object><cmis:properties>
+{PROPERTIES}
+{ASPECTS}
+</cmis:properties></cmisra:object>
 </atom:entry>
 <?php
 		return ob_get_clean();		
@@ -628,7 +631,62 @@ xmlns:cmisra="http://docs.oasis-open.org/ns/cmis/restatom/200908/">
 <?php
 		return ob_get_clean();		
 	}
+
+	static function getAspectsTemplate() {
+		ob_start();
+?>
+		<e1:setAspects xmlns:e1="http://www.alfresco.org">{aspects}</e1:setAspects>
+<?php
+		return ob_get_clean();
+	}
+
+	static function getAspectTemplate() {
+		ob_start();
+?>	
+  <e1:properties>{properties}</e1:properties>
+<?php 
+		return ob_get_clean();
+	}
 	
+	function processAspectTemplate($aspectType, $propMap) {
+		
+
+			$aspectProps = array_filter($propMap);
+
+			$propertiesXml = $this->processPropertyTemplates($aspectTypeName, $aspectProps);
+
+			$result = CMISRepositoryWrapper::processTemplate($aspectTemplate,
+				array(
+					'aspectTypeName' => $aspectTypeName, 
+					'properties' => $propertiesXml
+				)
+			);
+
+			return $result;
+	}
+
+	function processAspectTemplates($aspects) {
+		$aspectsXml = array();
+		static $aspectTemplate;
+		static $aspectsTemplate;
+
+		if (!isset($aspectsTemplate)) {
+			$aspectsTemplate = CMISService::getAspectTemplate();
+		}
+		if (!isset($aspectTemplate)) {
+			$aspectTemplate = CMISService::getAspectTemplate();
+		}
+
+		foreach ($aspects as $aspectTypeName => $aspectProps) {
+			$aspectsXml[] = $this->processAspectTemplate($aspectTypeName, $aspectProps);
+		}
+
+		$aspectsTemplate = CMISService::getAspectsTemplate();
+
+ 		$result = CMISRepositoryWrapper::processTemplate($aspectsTemplate,array('aspects' => implode("\n",$aspectsXml)));
+		return $result;
+	}
+
 	function processPropertyTemplates($objectType,$propMap) {
 		static $propTemplate;
 		static $propertyTypeMap;
@@ -761,6 +819,14 @@ xmlns:cmisra="http://docs.oasis-open.org/ns/cmis/restatom/200908/">
 		// TODO: Need Proper Query String Handling
 		// Assumes that the 'down' link does not have a querystring in it
 		$myURL = CMISRepositoryWrapper::getOpUrl($myURL,$options);
+
+		// HACK: remove Alfresco aspects from properties array 
+		// to add them explicitly in a wrapped XML-Stanza later
+		if (isset($properties['aspects'])) {
+			$aspects = $properties['aspects'];
+			unset($properties['aspects']);
+		}
+
 		static $entry_template;
 		if (!isset($entry_template)) {
 			$entry_template = CMISService::getEntryTemplate();
@@ -779,6 +845,14 @@ xmlns:cmisra="http://docs.oasis-open.org/ns/cmis/restatom/200908/">
 		} else {
 			$hash_values=array();
 		}
+
+		if (!empty($aspects)) {
+			// HACK: Alfresco Aspect Templating
+			$aspects_xml = $this->processAspectTemplates($aspects);
+
+			$hash_values["ASPECTS"] = $aspects_xml;
+		}
+
 		$hash_values["PROPERTIES"]=$properties_xml;
 		$hash_values["SUMMARY"]=CMISService::getSummaryTemplate();
 		if ($content) {
