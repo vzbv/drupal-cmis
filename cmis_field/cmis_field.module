@@ -221,8 +221,8 @@ function cmis_field_field_widget_form(&$form, &$form_state, $field, $instance, $
 function cmis_field_ajax_remove($widget_id) {
   $commands = array();
 
-  $commands[] = ajax_command_invoke('#' . $widget_id . '-title', 'val', array(''));
-  $commands[] = ajax_command_invoke('#' . $widget_id . '-path', 'val', array(''));
+  $commands[] = ajax_command_invoke('#' . $widget_id . '-title', 'attr', array('value', ''));
+  $commands[] = ajax_command_invoke('#' . $widget_id . '-path', 'attr', array('value', ''));
 
   $page = array();
   $page['#type'] = 'ajax';
