@@ -180,12 +180,25 @@ function cmis_field_field_widget_form(&$form, &$form_state, $field, $instance, $
   if ($root_folder_path != '') {
     module_load_include('api.inc', 'cmis');
     module_load_include('utils.inc', 'cmis_browser');
+    try {
+      // Invoke CMIS service
+      $repository = cmis_get_repository();
 
-    // Invoke CMIS service
-    $repository = cmis_get_repository();
-
-    $object = cmisapi_getObjectByPath($repository->repositoryId, $root_folder_path);
-    $ajax_path .= base64_encode($object->properties['cmis:objectId']);
+      if (isset($repository->repositoryId)) {
+        $object = cmisapi_getObjectByPath($repository->repositoryId, $root_folder_path);
+        $ajax_path .= base64_encode($object->properties['cmis:objectId']);
+      }
+      else {
+        drupal_set_message(t('Failed accessing the CMIS Repository'), 'error', FALSE);
+        $element['#disabled'] = TRUE;
+        return $element;  
+      }
+    }
+    catch (CMISException $e) {
+      drupal_set_message(t('Failed accessing the CMIS Repository'), 'error', FALSE);
+      $element['#disabled'] = TRUE;
+      return $element;
+    }
   }
 
   $button = array(
